@@ -26,11 +26,27 @@ fn is_torch_pre_dll(path: &str)->bool{
     }
     return false;
 }
+fn pre_dll_has_exist()->bool{
+    let global_file_name = vec!["torch.dll", "torch_cpu.dll", "torch_cuda.dll", "c10_cuda.dll", "c10.dll", 
+    "uv.dll", "cudnn_ops_infer64_8.dll", "cudnn_cnn_infer64_8.dll","asmjit.dll", "zlibwapi.dll", "nvToolsExt64_1.dll", 
+    "nvfuser_codegen.dll", "cudnn64_8.dll"];
+    for name in global_file_name.iter(){
+        let path = Path::new(".").join(name);
+        if path.exists(){
+            return true;
+        }
+    }
+    return false;
+}
 
 pub async fn download_and_extract(
     url: &str,
     output_path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if( pre_dll_has_exist() ){
+        println!("The pre dll has existed, no need to download again");
+        return Ok(());
+    }
     // 创建一个 Reqwest 客户端
     let client = Client::new();
 
@@ -63,7 +79,7 @@ pub async fn download_and_extract(
 
     pb.finish_with_message(format!("Downloaded {} to {}", url, output_path));
 
-    解压文件
+    // 解压文件
     let file = File::open(output_path)?;
     let mut archive = Archive::new(GzDecoder::new(file));
     for entry in archive.entries()? {
@@ -94,9 +110,9 @@ pub async fn download_and_extract(
     }
     println!("Unzip completed");
     //move the extracted files to the current directory
-    let output_path = Path::new("libtorch/lib");
+    let torch_dir = Path::new("libtorch/lib");
     // let output_path = output_path.parent().unwrap();
-    for entry in fs::read_dir(output_path)? {
+    for entry in fs::read_dir(torch_dir)? {
         let entry = entry?;
         let path = entry.path();
         let file_name = path.file_name().unwrap();
@@ -110,8 +126,8 @@ pub async fn download_and_extract(
         
     }
     println!("Move completed");
-    //delete the extracted folder
-    // fs::remove_dir_all(output_path)?;
+    // delete the extracted folder
+    fs::remove_dir_all(output_path)?;
     Ok(())
 }
 
