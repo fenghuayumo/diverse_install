@@ -10,6 +10,6 @@ reqwest = { version = "0.11", features = ["json", "stream", "blocking"] }
 tokio = { version = "1", features = ["full"] }
 indicatif = "0.16"
 zip = "0.5"
-features = "0.10.0"
+futures = "0.3.30"
 tar = "0.4.40"
 flate2 = "1.0.28"
