@@ -32,49 +32,49 @@ pub async fn download_and_extract(
     output_path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // 创建一个 Reqwest 客户端
-    // let client = Client::new();
+    let client = Client::new();
 
-    // // 下载文件
-    // let res = client.get(url).send().await?;
+    // 下载文件
+    let res = client.get(url).send().await?;
 
-    // // 获取文件大小
-    // let total_size = res.content_length().ok_or("Failed to get content length")?;
+    // 获取文件大小
+    let total_size = res.content_length().ok_or("Failed to get content length")?;
 
-    // // 设置进度条
-    // let pb = ProgressBar::new(total_size);
-    // pb.set_style(ProgressStyle::default_bar()
-    //     .template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
-    //     .progress_chars("#>-"));
-    // pb.set_message(format!("Downloading {}", url));
+    // 设置进度条
+    let pb = ProgressBar::new(total_size);
+    pb.set_style(ProgressStyle::default_bar()
+        .template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
+        .progress_chars("#>-"));
+    pb.set_message(format!("Downloading {}", url));
 
-    // // 创建一个文件用于保存下载的文件
-    // let mut file = File::create(output_path)?;
+    // 创建一个文件用于保存下载的文件
+    let mut file = File::create(output_path)?;
 
-    // // 读取响应流并写入文件
-    // let mut stream = res.bytes_stream();
-    // let mut downloaded: u64 = 0;
-    // while let Some(chunk) = stream.next().await {
-    //     let chunk = chunk?;
-    //     file.write_all(&chunk)?;
-    //     let new = downloaded + (chunk.len() as u64);
-    //     downloaded = new;
-    //     pb.set_position(new);
-    // }
+    // 读取响应流并写入文件
+    let mut stream = res.bytes_stream();
+    let mut downloaded: u64 = 0;
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        file.write_all(&chunk)?;
+        let new = downloaded + (chunk.len() as u64);
+        downloaded = new;
+        pb.set_position(new);
+    }
 
-    // pb.finish_with_message(format!("Downloaded {} to {}", url, output_path));
+    pb.finish_with_message(format!("Downloaded {} to {}", url, output_path));
 
-    // 解压文件
-    // let file = File::open(output_path)?;
-    // let mut archive = Archive::new(GzDecoder::new(file));
-    // for entry in archive.entries()? {
-    //     let mut entry = entry?;
-    //     let path = entry.path()?;
-    //     let dest = Path::new(output_path).join(path);
-    //     if let Some(parent) = dest.parent() {
-    //         fs::create_dir_all(parent)?;
-    //     }
-    //     entry.unpack(dest)?;
-    // }
+    解压文件
+    let file = File::open(output_path)?;
+    let mut archive = Archive::new(GzDecoder::new(file));
+    for entry in archive.entries()? {
+        let mut entry = entry?;
+        let path = entry.path()?;
+        let dest = Path::new(output_path).join(path);
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        entry.unpack(dest)?;
+    }
     let zip_file = File::open(output_path)?;
     let mut archive = ZipArchive::new(zip_file)?;
     for i in 0..archive.len() {
